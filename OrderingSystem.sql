@@ -287,3 +287,61 @@ INSERT INTO OrderHistory (order_id, status, change_time) VALUES
 (1, 'preparing', NOW() - INTERVAL '10 minutes'),
 (1, 'ready', NOW());
 
+--ЗАПРОСЫ барлық клинеттерді алу
+SELECT * FROM Customers;
+
+--Төлемдердің жалпы сомасын есептеу
+SELECT SUM(amount) AS total_payments FROM Payments;
+
+--Клиенттердің ең көп тапсырыс берген тағамдарын табу
+WITH OrderCounts AS (
+    SELECT
+        o.customer_id,
+        od.menu_item_id,
+        COUNT(od.menu_item_id) AS order_count
+    FROM Orders o
+    JOIN OrderDetails od ON o.id = od.order_id
+    GROUP BY o.customer_id, od.menu_item_id
+), RankedOrders AS (
+    SELECT
+        oc.customer_id,
+        oc.menu_item_id,
+        oc.order_count,
+        RANK() OVER (PARTITION BY oc.customer_id ORDER BY oc.order_count DESC) AS rank
+    FROM OrderCounts oc
+)
+SELECT
+    c.name AS customer_name,
+    m.name AS most_ordered_dish,
+    ro.order_count
+FROM RankedOrders ro
+JOIN Customers c ON ro.customer_id = c.id
+JOIN MenuItems m ON ro.menu_item_id = m.id
+WHERE ro.rank = 1;
+
+
+--Әр ай бойынша жалпы табыс және орташа чек сомасын есептеу.
+SELECT
+    DATE_TRUNC('month', order_time) AS month,
+    COUNT(id) AS total_orders,
+    SUM(total_price) AS total_revenue,
+    AVG(total_price) AS average_order_value
+FROM Orders
+GROUP BY month
+ORDER BY month DESC;
+
+--Соңғы 3 айда акциялар қолданылған тапсырыстарды табу
+SELECT
+    o.id AS order_id,
+    c.name AS customer_name,
+    SUM(o.total_price * (p.discount_percentage / 100)) AS total_discount,
+    o.total_price - SUM(o.total_price * (p.discount_percentage / 100)) AS final_price
+FROM Orders o
+JOIN OrderPromotions op ON o.id = op.order_id
+JOIN Promotions p ON op.promotion_id = p.id
+JOIN Customers c ON o.customer_id = c.id
+WHERE o.order_time >= NOW() - INTERVAL '3 months'
+GROUP BY o.id, c.name, order_time
+ORDER BY o.order_time DESC;
+
+
