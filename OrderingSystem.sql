@@ -206,3 +206,84 @@ SELECT conname AS constraint_name,
 FROM pg_constraint
 WHERE contype = 'u'
 ORDER BY table_name;
+
+
+-- Заполнение таблицы Customers (Клиенты)
+INSERT INTO Customers (name, phone, email, address) VALUES
+('Алихан Тулеуов', '+77710001122', 'alihan@mail.com', 'Алматы, ул. Абая 10'),
+('Айжан Садыкова', '+77723334455', 'aizhan@mail.com', 'Нур-Султан, ул. Тауелсиздик 5'),
+('Ерболат Касымов', '+77736667788', 'erbolat@mail.com', 'Шымкент, ул. Байтурсынова 15');
+
+-- Заполнение таблицы Categories (Категории блюд)
+INSERT INTO Categories (name) VALUES
+('Горячие блюда'),
+('Салаты'),
+('Напитки');
+
+-- Заполнение таблицы MenuItems (Меню)
+INSERT INTO MenuItems (name, description, category_id, price, available) VALUES
+('Плов', 'Традиционный узбекский плов', 1, 1800.00, TRUE),
+('Цезарь', 'Салат с курицей и соусом цезарь', 2, 1500.00, TRUE),
+('Лимонад', 'Домашний лимонад с мятой', 3, 600.00, TRUE);
+
+-- Заполнение таблицы Orders (Заказы)
+INSERT INTO Orders (customer_id, status, total_price, order_time) VALUES
+(1, 'pending', 3600.00, NOW()),
+(2, 'preparing', 1500.00, NOW()),
+(3, 'ready', 600.00, NOW());
+
+-- Заполнение таблицы OrderDetails (Детали заказа)
+INSERT INTO OrderDetails (order_id, menu_item_id, quantity, price) VALUES
+(1, 1, 2, 3600.00),
+(2, 2, 1, 1500.00),
+(3, 3, 1, 600.00);
+
+-- Заполнение таблицы PaymentMethods (Методы оплаты)
+INSERT INTO PaymentMethods (method) VALUES
+('Наличные'),
+('Банковская карта'),
+('QR-код Kaspi');
+
+-- Заполнение таблицы Payments (Платежи)
+INSERT INTO Payments (order_id, payment_method_id, amount, status) VALUES
+(1, 2, 3600.00, 'paid'),
+(2, 3, 1500.00, 'pending'),
+(3, 1, 600.00, 'paid');
+
+-- Заполнение таблицы Promotions (Акции)
+INSERT INTO Promotions (name, description, discount_percentage, start_date, end_date) VALUES
+('Скидка 10% на плов', 'Акция на традиционный плов', 10, NOW(), NOW() + INTERVAL '7 days'),
+('Бесплатный напиток', 'При заказе на сумму от 3000 тенге', 100, NOW(), NOW() + INTERVAL '10 days');
+
+-- Заполнение таблицы OrderPromotions (Связь заказов и акций)
+INSERT INTO OrderPromotions (order_id, promotion_id) VALUES
+(1, 1);
+
+-- Заполнение таблицы MenuItemPromotions (Связь меню и акций)
+INSERT INTO MenuItemPromotions (menu_item_id, promotion_id) VALUES
+(1, 1);
+
+-- Заполнение таблицы Deliveries (Доставки)
+INSERT INTO Deliveries (order_id, delivery_address, estimated_time, status) VALUES
+(1, 'Алматы, ул. Абая 10', '30 minutes', 'on the way'),
+(2, 'Нур-Султан, ул. Тауелсиздик 5', '45 minutes', 'pending');
+
+-- Заполнение таблицы Reviews (Отзывы)
+INSERT INTO Reviews (customer_id, order_id, rating, comment, review_date) VALUES
+(1, 1, 5, 'Очень вкусный плов!', NOW()),
+(2, 2, 4, 'Цезарь был свежий, но хотелось больше соуса.', NOW());
+
+-- Заполнение таблицы LoyaltyProgram (Программа лояльности)
+INSERT INTO LoyaltyProgram (customer_id, points) VALUES
+(1, 100),
+(2, 50);
+
+-- Заполнение таблицы TableReservations (Бронирование столов)
+INSERT INTO TableReservations (customer_id, reservation_time, guests_count, status) VALUES
+(3, NOW() + INTERVAL '1 day', 2, 'confirmed');
+
+-- Заполнение таблицы OrderHistory (История заказов)
+INSERT INTO OrderHistory (order_id, status, change_time) VALUES
+(1, 'preparing', NOW() - INTERVAL '10 minutes'),
+(1, 'ready', NOW());
+
