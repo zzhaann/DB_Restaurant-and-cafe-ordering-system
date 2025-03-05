@@ -345,3 +345,72 @@ GROUP BY o.id, c.name, order_time
 ORDER BY o.order_time DESC;
 
 
+
+-- Жаңа SEQUENCE құру
+CREATE SEQUENCE test_sequence START 1 INCREMENT 1 CACHE 10;
+
+-- SEQUENCE-ті қолдану
+SELECT NEXTVAL('test_sequence');  -- 1
+SELECT NEXTVAL('test_sequence');  -- 2
+
+-- Соңғы алынған мәнді көру
+SELECT CURRVAL('test_sequence');  -- 2
+
+
+-- B-TREE индексін құру
+CREATE INDEX idx_customers_phone ON Customers (phone);
+
+-- HASH индексі (Тек теңдік іздеу үшін)
+CREATE INDEX idx_customers_email ON Customers USING HASH (email);
+
+-- GIN индексі (JSONB өрісі үшін)
+CREATE INDEX idx_orders_details ON Orders USING GIN (to_tsvector('english', status));
+
+
+
+-- 1. Келесі тапсырыс ID-сін алу
+SELECT NEXTVAL('orders_id_seq');
+
+-- 2. Соңғы алынған ID-ні көру
+SELECT CURRVAL('orders_id_seq');
+
+-- 3. Тұтынушыларды телефон нөміріне қарай жылдам іздеу
+EXPLAIN ANALYZE SELECT * FROM Customers WHERE phone = '+77710001122';
+
+-- 4. Тапсырыстар тарихынан соңғы өзгерістерді алу (INDEX пайдалану)
+EXPLAIN ANALYZE SELECT * FROM OrderHistory WHERE order_id = 1 ORDER BY change_time DESC LIMIT 5;
+
+-- 5. Жаңа тапсырыс қосу және ID-ні көру
+INSERT INTO Orders (customer_id, status, total_price, order_time) VALUES (1, 'pending', 5000.00, NOW()) RETURNING id;
+
+-- 6. Кестеде индекстерді тексеру
+SELECT * FROM pg_indexes WHERE tablename = 'customers';
+
+-- 7. Индексті жою
+DROP INDEX idx_customers_phone;
+
+
+--Клиент туралы ақпаратпен белсенді тапсырыстарды көрсететін көріністі (VIEW) жасайық.
+CREATE VIEW active_orders AS
+SELECT
+    o.id AS order_id,
+    c.name AS customer_name,
+    o.total_price,
+    o.status,
+    o.order_time
+FROM Orders o
+JOIN Customers c ON o.customer_id = c.id
+WHERE o.status IN ('pending', 'preparing', 'ready');
+
+--Payments кестесінде төлем сомасы 0-ден асатындай етіп шектеуді (CONSTRAINT) басамыз.
+ALTER TABLE Payments
+ADD CONSTRAINT check_payment_amount CHECK (amount > 0);
+ --кате шыгаруы керек
+ INSERT INTO Payments (order_id, payment_method_id, amount, status)
+VALUES (2, 1, -100, 'failed');
+
+
+--cхема куру
+CREATE SCHEMA restaurant;
+
+
